@@ -73,8 +73,12 @@ MercadoBitcoinTrade.prototype = {
 
     call: function (method, parameters, success, error) {
 
-        var now = Math.round(new Date().getTime() / 1000)
-        var queryString = qs.stringify({'tapi_method': method, 'tapi_nonce': now})
+        // Aguarda 1 segundo entre as requisicoes
+        for(i=0; i<1000000000; ++i){}
+
+        var now = Math.round(new Date().getTime() )
+        var queryString = qs.stringify({'tapi_method': method, 'tapi_nonce': (now)})
+        console.log(`tapi_nonce ${now}`)
         if(parameters) queryString += '&' + qs.stringify(parameters)
 
         var signature = crypto.createHmac('sha512', this.config.SECRET)

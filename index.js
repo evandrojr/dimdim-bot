@@ -51,11 +51,12 @@ function trade() {
 
     var cfg = {}
 
-    cfg.precoBase = 1000
-    cfg.quantidadeVendaLtc = 0.03
-    cfg.quantidadeCompraLtc = 0.03
-    cfg.precoMinimoVenda = cfg.precoBase * (1 + parseFloat(process.env.PROFITABILITY))
-    cfg.precoMaximoCompra = cfg.precoBase * (1 - parseFloat(process.env.PROFITABILITY))
+    cfg.precoBase = 930
+    cfg.quantidadeVendaLtc = 0.05
+    cfg.quantidadeCompraLtc = 0.01
+    cfg.lucroMinimo = process.env.PROFITABILITY
+    cfg.precoMinimoVenda = Math.round(cfg.precoBase * (1 + parseFloat(process.env.PROFITABILITY)))
+    cfg.precoMaximoCompra = Math.round(cfg.precoBase * (1 - parseFloat(process.env.PROFITABILITY)))
 
     console.log(cfg)
     // process.exit()
@@ -80,7 +81,7 @@ function trade() {
                 }
             )
         } else {
-            console.log("Barato demais para vender, aguarde mais um pouco")
+            console.log("Barato demais para vender, aguarde mais um pouco até alcançar " + cfg.precoMinimoVenda)
         }
 
         // Comprar
@@ -96,12 +97,16 @@ function trade() {
                 }
             )
         } else {
-            console.log("Caro demais para comprar, aguarde mais um pouco")
+            console.log("Caro demais para comprar, aguarde mais um pouco até alcançar " + cfg.precoMaximoCompra)
         }
 
     })
 }
 
+
+
+
+trade()
 setInterval(() => {
 
     trade()

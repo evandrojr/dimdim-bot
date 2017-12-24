@@ -60,11 +60,11 @@ MercadoBitcoinTrade.prototype = {
     },
 
     placeBuyOrder: function(qty, limit_price, success, error){
-        this.call('place_buy_order', {coin_pair: `BRL${config.CURRENCY}`, quantity: (''+qty).substr(0,10), limit_price: ''+limit_price}, success, error)
+        this.call('place_buy_order', {coin_pair: `BRL${this.config.CURRENCY}`, quantity: (''+qty).substr(0,10), limit_price: ''+limit_price}, success, error)
     },
 
     placeSellOrder: function(qty, limit_price, success, error){
-        this.call('place_sell_order', {coin_pair: `BRL${config.CURRENCY}`, quantity: (''+qty).substr(0,10), limit_price: ''+limit_price}, success, error)
+        this.call('place_sell_order', {coin_pair: `BRL${this.config.CURRENCY}`, quantity: (''+qty).substr(0,10), limit_price: ''+limit_price}, success, error)
     },
 
     cancelOrder: function (orderId, success, error) {
@@ -74,7 +74,7 @@ MercadoBitcoinTrade.prototype = {
     call: function (method, parameters, success, error) {
 
         // Aguarda 1 segundo entre as requisicoes
-        for(i=0; i<1000000000; ++i){}
+        // for(i=0; i<1000000000; ++i){}
 
         var now = Math.round(new Date().getTime() )
         var queryString = qs.stringify({'tapi_method': method, 'tapi_nonce': (now)})

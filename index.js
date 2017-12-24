@@ -10,6 +10,8 @@ var tradeApi = new MercadoBitcoinTrade({
     pin: process.env.PIN
 })
 
+
+
 function getQuantity(coin, price, isBuy, callback) {
     price = parseFloat(price)
     coin = isBuy ? 'brl' : coin.toLowerCase()
@@ -45,85 +47,65 @@ function getQuantity(coin, price, isBuy, callback) {
 // Reais 10
 // LTC 0,01
 
-var cfg = {}
+function trade() {
 
-cfg.precoBase = 1000
-cfg.quantidadeVendaLtc = 0.01
-cfg.quantidadeCompraLtc = 0.01
-cfg.precoMinimoVenda = cfg.precoBase * (1 + parseFloat(process.env.PROFITABILITY))
-cfg.precoMaximoCompra = cfg.precoBase * (1-parseFloat(process.env.PROFITABILITY))
+    var cfg = {}
 
-console.log(cfg)
-// process.exit()
+    cfg.precoBase = 1000
+    cfg.quantidadeVendaLtc = 0.03
+    cfg.quantidadeCompraLtc = 0.03
+    cfg.precoMinimoVenda = cfg.precoBase * (1 + parseFloat(process.env.PROFITABILITY))
+    cfg.precoMaximoCompra = cfg.precoBase * (1 - parseFloat(process.env.PROFITABILITY))
 
-infoApi.ticker((tick) => {
-    console.log(tick)
+    console.log(cfg)
+    // process.exit()
 
-    // Vender
-    if (tick.last >= cfg.precoMinimoVenda) {
-        tradeApi.placeSellOrder(cfg.quantidadeVendaLtc, ticker.last,
-            (data) => {
-                console.log('Ordem de venda inserida no livro. ' + data)
-                process.exit();
-            },
-            (data) => {
-                console.log('Erro ao inserir ordem de venda no livro. ' + data)
-                process.exit(1);
-            }
-        )
-    }else{
-        console.log("Barato demais para vender, aguarde mais um pouco")
-    }
+    infoApi.ticker((tick) => {
+        tick = tick.ticker
+        console.log(tick)
 
-    // Comprar
-    if (tick.last <= cfg.precoMaximoCompra) {
-        tradeApi.placeBuyOrder(cfg.quantidadeCompraLtc, ticker.last,
-            (data) => {
-                console.log('Ordem de venda inserida no livro. ' + data)
-                process.exit();
-            },
-            (data) => {
-                console.log('Erro ao inserir ordem de venda no livro. ' + data)
-                process.exit(1);
-            }
-        )
-    }else{
-        console.log("Caro demais para comprar, aguarde mais um pouco")
-    }
+        // tick.last = parseFloat(tick.last)
+        console.log(tick.last)
 
-})
+        // Vender
+        if (tick.last >= cfg.precoMinimoVenda) {
+            tradeApi.placeSellOrder(cfg.quantidadeVendaLtc, tick.last,
+                (data) => {
+                    console.log('Ordem de venda inserida no livro. ' + data)
+                    process.exit();
+                },
+                (data) => {
+                    console.log('Erro ao inserir ordem de venda no livro. ' + data)
+                    process.exit(1);
+                }
+            )
+        } else {
+            console.log("Barato demais para vender, aguarde mais um pouco")
+        }
 
-// setInterval(() =>
-//     infoApi.ticker((tick) => {
-//         console.log(tick)
+        // Comprar
+        if (tick.last <= cfg.precoMaximoCompra) {
+            tradeApi.placeBuyOrder(cfg.quantidadeCompraLtc, tick.last,
+                (data) => {
+                    console.log('Ordem de compra inserida no livro. ' + data)
+                    process.exit();
+                },
+                (data) => {
+                    console.log('Erro ao inserir ordem de compra no livro. ' + data)
+                    process.exit(1);
+                }
+            )
+        } else {
+            console.log("Caro demais para comprar, aguarde mais um pouco")
+        }
 
-//         // Vender
-//         if (ticker.last >= precoBase * parseFloat(process.env.PROFITABILITY)) {
-//             tradeApi.placeSellOrder(0.01, ticker.last,
-//                 (data) => {
-//                     console.log('Ordem de venda inserida no livro. ' + data)
-//                     process.exit();
-//                 },
-//                 (data) => {
-//                     console.log('Erro ao inserir ordem de venda no livro. ' + data)
-//                     process.exit(1);
-//                 }
-//             )
-//         }
+    })
+}
 
-//         if (ticker.last <= precoBase - (precoBase * parseFloat(process.env.PROFITABILITY))) {
-//             tradeApi.placeBuyOrder(quantidadeCompraLtc, ticker.last,
-//                 (data) => {
-//                     console.log('Ordem de venda inserida no livro. ' + data)
-//                     process.exit();
-//                 },
-//                 (data) => {
-//                     console.log('Erro ao inserir ordem de venda no livro. ' + data)
-//                     process.exit(1);
-//                 }
-//             )
-//         }
+setInterval(() => {
 
-//     }),
-//     process.env.CRAWLER_INTERVAL
-// )
+    trade()
+
+    },
+    process.env.CRAWLER_INTERVAL
+)

@@ -28,15 +28,19 @@ function getQuantity(coin, price, isBuy, callback){
     (data) => console.log(data))
 }
 
+getQuantity('LTC', tick.sell, false, (qty) => {
+    console.log(qty)
+})
+exit;
+
+
 setInterval(() =>
    infoApi.ticker((tick) => {
        console.log(tick)
 
        getQuantity('LTC', tick.sell, false, (qty) => {
-
                     console.log(qty)
-
-               })
+        })
 
 
 

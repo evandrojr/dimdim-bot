@@ -54,7 +54,7 @@ function trade() {
     cfg.precoBase = 930
     cfg.quantidadeVendaLtc = 0.05
     cfg.quantidadeCompraLtc = 0.01
-    cfg.lucroMinimo = process.env.PROFITABILITY
+    cfg.lucroMinimo = parseFloat(process.env.PROFITABILITY)
     cfg.precoMinimoVenda = Math.round(cfg.precoBase * (1 + parseFloat(process.env.PROFITABILITY)))
     cfg.precoMaximoCompra = Math.round(cfg.precoBase * (1 - parseFloat(process.env.PROFITABILITY)))
 
@@ -77,7 +77,6 @@ function trade() {
                 },
                 (data) => {
                     console.log('Erro ao inserir ordem de venda no livro. ' + data)
-                    process.exit(1);
                 }
             )
         } else {
@@ -93,7 +92,6 @@ function trade() {
                 },
                 (data) => {
                     console.log('Erro ao inserir ordem de compra no livro. ' + data)
-                    process.exit(1);
                 }
             )
         } else {

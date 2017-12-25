@@ -1,4 +1,7 @@
 //MERCADO BITCOIN
+"use strict";
+
+
 const unirest = require('unirest')
 const crypto  = require('crypto')
 const qs      = require('querystring')
@@ -72,9 +75,6 @@ MercadoBitcoinTrade.prototype = {
     },
 
     call: function (method, parameters, success, error) {
-
-        // Aguarda 1 segundo entre as requisicoes
-        // for(i=0; i<1000000000; ++i){}
 
         var now = Math.round(new Date().getTime() )
         var queryString = qs.stringify({'tapi_method': method, 'tapi_nonce': (now)})

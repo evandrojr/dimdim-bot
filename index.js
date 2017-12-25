@@ -1,5 +1,9 @@
 //index.js
+"use strict";
+
+
 require("dotenv-safe").load()
+var sync = require('synchronize')
 const MercadoBitcoin = require("./api").MercadoBitcoin
 const MercadoBitcoinTrade = require("./api").MercadoBitcoinTrade
 var infoApi = new MercadoBitcoin({ currency: 'LTC' })
@@ -10,25 +14,10 @@ var tradeApi = new MercadoBitcoinTrade({
     pin: process.env.PIN
 })
 
+const UtilClass = require("./util").Util
+var U = new UtilClass()
 
 
-function getQuantity(coin, price, isBuy, callback) {
-    price = parseFloat(price)
-    coin = isBuy ? 'brl' : coin.toLowerCase()
-
-    tradeApi.getAccountInfo((response_data) => {
-        var balance = parseFloat(response_data.balance[coin].available).toFixed(5)
-        balance = parseFloat(balance)
-        if (coin != 'ltc') {
-            if (isBuy && balance < 50) return console.log('Sem saldo disponível para comprar!')
-        }
-        console.log(`Saldo disponível de ${coin}: ${balance}`)
-
-        if (isBuy) balance = parseFloat((balance / price).toFixed(5))
-        callback(parseFloat(balance) - 0.00001)//tira a diferença que se ganha no arredondamento
-    },
-        (data) => console.log(data))
-}
 
 
 // tradeApi.getAccountInfo(response_data => {
@@ -47,68 +36,99 @@ function getQuantity(coin, price, isBuy, callback) {
 // Reais 10
 // LTC 0,01
 
-function trade() {
 
-    var cfg = {}
+var d = {}
+d.env = "test" // test | production
+d.crawlerIntevalo = 10000 // Em milisegundos
+d.quantidadeVendaLtc = 0.01
+d.quantidadeCompraLtc = 0.01
+d.lucroMinimo = 0.00
 
-    cfg.precoBase = 930
-    cfg.quantidadeVendaLtc = 0.05
-    cfg.quantidadeCompraLtc = 0.01
-    cfg.lucroMinimo = parseFloat(process.env.PROFITABILITY)
-    cfg.precoMinimoVenda = Math.round(cfg.precoBase * (1 + parseFloat(process.env.PROFITABILITY)))
-    cfg.precoMaximoCompra = Math.round(cfg.precoBase * (1 - parseFloat(process.env.PROFITABILITY)))
-
-    console.log(cfg)
-    // process.exit()
+function calcularDefinicoesVariaves(d){
 
     infoApi.ticker((tick) => {
-        tick = tick.ticker
-        console.log(tick)
-
-        // tick.last = parseFloat(tick.last)
-        console.log(tick.last)
-
-        // Vender
-        if (tick.last >= cfg.precoMinimoVenda) {
-            tradeApi.placeSellOrder(cfg.quantidadeVendaLtc, tick.last,
-                (data) => {
-                    console.log('Ordem de venda inserida no livro. ' + data)
-                    process.exit();
-                },
-                (data) => {
-                    console.log('Erro ao inserir ordem de venda no livro. ' + data)
-                }
-            )
-        } else {
-            console.log("Barato demais para vender, aguarde mais um pouco até alcançar " + cfg.precoMinimoVenda)
-        }
-
-        // Comprar
-        if (tick.last <= cfg.precoMaximoCompra) {
-            tradeApi.placeBuyOrder(cfg.quantidadeCompraLtc, tick.last,
-                (data) => {
-                    console.log('Ordem de compra inserida no livro. ' + data)
-                    process.exit();
-                },
-                (data) => {
-                    console.log('Erro ao inserir ordem de compra no livro. ' + data)
-                }
-            )
-        } else {
-            console.log("Caro demais para comprar, aguarde mais um pouco até alcançar " + cfg.precoMaximoCompra)
-        }
-
+        d.precoBase=parseFloat(tick.ticker.last)
+        d.precoMinimoVenda = Math.round(d.precoBase * (1 + parseFloat(d.lucroMinimo)))
+        d.precoMaximoCompra = Math.round(d.precoBase * (1 - parseFloat(d.lucroMinimo)))
+        rodar()
     })
+
 }
 
 
 
+function tradeUmaVez() {
+    console.log(d)
+    infoApi.ticker((tick) => {
+        tick = tick.ticker
+        console.log(tick)
+        // console.log(tick.last)
 
-trade()
-setInterval(() => {
+        // Vender
+        if (tick.last >= d.precoMinimoVenda) {
+            if (d.env === "test") {
+                console.log(`SIMULAÇÃO - Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
+                console.log('SIMULAÇÃO - Ordem de venda inserida no livro.')
+            }
+            if (d.env === "production") {
+                tradeApi.placeSellOrder(d.quantidadeVendaLtc, tick.last,
+                    (data) => {
+                        console.log(`Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
+                        console.log('Ordem de venda inserida no livro. ' + data)
+                        process.exit();
+                    },
+                    (data) => {
+                        console.log('Erro ao inserir ordem de venda no livro. ' + data)
+                    }
+                )
+            }
+        } else {
+            console.log("Barato demais para vender, aguarde mais um pouco até alcançar " + d.precoMinimoVenda)
+        }
 
-    trade()
+        // Comprar
+        if (tick.last <= d.precoMaximoCompra) {
+            if (d.env === "test") {
+                console.log(`SIMULAÇÃO - Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
+                console.log('SIMULAÇÃO - Ordem de compra inserida no livro.')
+            }
+            if (d.env === "production") {
+                tradeApi.placeBuyOrder(d.quantidadeCompraLtc, tick.last,
+                    (data) => {
+                        console.log(`Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
+                        console.log('Ordem de compra inserida no livro. ' + data)
+                        process.exit();
+                    },
+                    (data) => {
+                        console.log('Erro ao inserir ordem de compra no livro. ' + data)
+                    }
+                )
+            }
+        } else {
+            console.log("Caro demais para comprar, aguarde mais um pouco até alcançar " + d.precoMaximoCompra)
+        }
+    })
+}
 
+////////////////////////////// Início //////////////////////////////////////////////////
+
+
+
+///// calcularDefinicoesVariaves(d)
+
+function preparar(){
+    // Irá chamar rodar no final
+    calcularDefinicoesVariaves(d)
+}
+
+
+function rodar(){
+    tradeUmaVez()
+    setInterval(() => {
+        tradeUmaVez()
     },
-    process.env.CRAWLER_INTERVAL
-)
+        d.crawlerIntevalo
+    )
+}
+
+preparar();

@@ -39,22 +39,34 @@ var U = new UtilClass()
 
 var d = {}
 d.env = "test" // test | production
-d.crawlerIntevalo = 10000 // Em milisegundos
+d.crawlerIntevalo = 20000 // Em milisegundos
 d.quantidadeVendaLtc = 0.01
 d.quantidadeCompraLtc = 0.01
-d.lucroMinimo = 0.00
+d.lucroMinimo = 0.001
 
-function calcularDefinicoesVariaves(d){
-
-    infoApi.ticker((tick) => {
-        d.precoBase=parseFloat(tick.ticker.last)
-        d.precoMinimoVenda = Math.round(d.precoBase * (1 + parseFloat(d.lucroMinimo)))
-        d.precoMaximoCompra = Math.round(d.precoBase * (1 - parseFloat(d.lucroMinimo)))
-        rodar()
-    })
-
+if(d.lucroMinimo < 0.02 && d.env != "test"){
+    console.log("Lucro muito baixo para produção");
+    process.exit(1);
 }
 
+function definirPrecos(d, lastPrice){
+    d.precoBase=lastPrice
+    d.precoMinimoVenda = d.precoBase * (1 + parseFloat(d.lucroMinimo))
+    d.precoMaximoCompra = d.precoBase * (1 - parseFloat(d.lucroMinimo))
+    let precos = {}
+    precos.precoBase = d.precoBase
+    precos.precoMinimoVenda = d.precoMinimoVenda
+    precos.precoMaximoCompra = d.precoMaximoCompra
+    console.log("Novos preços obtidos: ");
+    console.log(precos)
+}
+
+function calcularDefinicoesVariaves(d){
+    infoApi.ticker((tick) => {
+        definirPrecos(d, parseFloat(tick.ticker.last))
+        rodar()
+    })
+}
 
 
 function tradeUmaVez() {
@@ -69,12 +81,14 @@ function tradeUmaVez() {
             if (d.env === "test") {
                 console.log(`SIMULAÇÃO - Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
                 console.log('SIMULAÇÃO - Ordem de venda inserida no livro.')
+                definirPrecos(d, tick.last)
             }
             if (d.env === "production") {
                 tradeApi.placeSellOrder(d.quantidadeVendaLtc, tick.last,
                     (data) => {
                         console.log(`Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
                         console.log('Ordem de venda inserida no livro. ' + data)
+                        definirPrecos(d, tick.last)
                         process.exit();
                     },
                     (data) => {
@@ -91,12 +105,14 @@ function tradeUmaVez() {
             if (d.env === "test") {
                 console.log(`SIMULAÇÃO - Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
                 console.log('SIMULAÇÃO - Ordem de compra inserida no livro.')
+                definirPrecos(d, tick.last)
             }
             if (d.env === "production") {
                 tradeApi.placeBuyOrder(d.quantidadeCompraLtc, tick.last,
                     (data) => {
                         console.log(`Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
                         console.log('Ordem de compra inserida no livro. ' + data)
+                        definirPrecos(d, tick.last)
                         process.exit();
                     },
                     (data) => {

@@ -74,6 +74,8 @@ MercadoBitcoinTrade.prototype = {
         this.call('cancel_order', {coin_pair: `BRL${config.CURRENCY}`, order_id: orderId}, success, error)
     },
 
+
+
     call: function (method, parameters, success, error) {
 
         var now = Math.round(new Date().getTime() )

@@ -1,9 +1,7 @@
 //index.js
 "use strict";
 
-
 require("dotenv-safe").load()
-var sync = require('synchronize')
 const MercadoBitcoin = require("./api").MercadoBitcoin
 const MercadoBitcoinTrade = require("./api").MercadoBitcoinTrade
 var infoApi = new MercadoBitcoin({ currency: 'LTC' })
@@ -18,8 +16,6 @@ const UtilClass = require("./util").Util
 var U = new UtilClass()
 
 
-
-
 // tradeApi.getAccountInfo(response_data => {
 //     console.log(response_data);
 //     process.exit();
@@ -30,27 +26,27 @@ var U = new UtilClass()
 //     process.exit();
 // })
 
-
 // Baby step 1
 // Fixar um valor em reais e um valor em LTC para comprar ou vender
 // Reais 10
 // LTC 0,01
-
 
 var d = {}
 d.env = "test" // test | production
 d.crawlerIntevalo = 20000 // Em milisegundos
 d.quantidadeVendaLtc = 0.01
 d.quantidadeCompraLtc = 0.01
-d.lucroMinimo = 0.001
+d.lucroMinimo = 0.01
+d.tradesMax = 2
+d.trades = 0
 
-if(d.lucroMinimo < 0.02 && d.env != "test"){
+if (d.lucroMinimo < 0.02 && d.env != "test") {
     console.log("Lucro muito baixo para produção");
     process.exit(1);
 }
 
-function definirPrecos(d, lastPrice){
-    d.precoBase=lastPrice
+function definirPrecos(d, lastPrice) {
+    d.precoBase = lastPrice
     d.precoMinimoVenda = d.precoBase * (1 + parseFloat(d.lucroMinimo))
     d.precoMaximoCompra = d.precoBase * (1 - parseFloat(d.lucroMinimo))
     let precos = {}
@@ -61,7 +57,7 @@ function definirPrecos(d, lastPrice){
     console.log(precos)
 }
 
-function calcularDefinicoesVariaves(d){
+function calcularDefinicoesVariaves(d) {
     infoApi.ticker((tick) => {
         definirPrecos(d, parseFloat(tick.ticker.last))
         rodar()
@@ -69,7 +65,7 @@ function calcularDefinicoesVariaves(d){
 }
 
 
-function tradeUmaVez() {
+function tentarTrade() {
     console.log(d)
     infoApi.ticker((tick) => {
         tick = tick.ticker
@@ -81,6 +77,7 @@ function tradeUmaVez() {
             if (d.env === "test") {
                 console.log(`SIMULAÇÃO - Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
                 console.log('SIMULAÇÃO - Ordem de venda inserida no livro.')
+                d.trades++;
                 definirPrecos(d, tick.last)
             }
             if (d.env === "production") {
@@ -88,8 +85,8 @@ function tradeUmaVez() {
                     (data) => {
                         console.log(`Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
                         console.log('Ordem de venda inserida no livro. ' + data)
+                        d.trades++;
                         definirPrecos(d, tick.last)
-                        process.exit();
                     },
                     (data) => {
                         console.log('Erro ao inserir ordem de venda no livro. ' + data)
@@ -105,6 +102,7 @@ function tradeUmaVez() {
             if (d.env === "test") {
                 console.log(`SIMULAÇÃO - Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
                 console.log('SIMULAÇÃO - Ordem de compra inserida no livro.')
+                d.trades++;
                 definirPrecos(d, tick.last)
             }
             if (d.env === "production") {
@@ -112,8 +110,8 @@ function tradeUmaVez() {
                     (data) => {
                         console.log(`Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
                         console.log('Ordem de compra inserida no livro. ' + data)
+                        d.trades++;
                         definirPrecos(d, tick.last)
-                        process.exit();
                     },
                     (data) => {
                         console.log('Erro ao inserir ordem de compra no livro. ' + data)
@@ -129,19 +127,19 @@ function tradeUmaVez() {
 ////////////////////////////// Início //////////////////////////////////////////////////
 
 
-
-///// calcularDefinicoesVariaves(d)
-
-function preparar(){
+function preparar() {
     // Irá chamar rodar no final
     calcularDefinicoesVariaves(d)
 }
 
-
-function rodar(){
-    tradeUmaVez()
+function rodar() {
+    if (d.trades <= d.tradesMax) {
+        tentarTrade()
+    }
     setInterval(() => {
-        tradeUmaVez()
+        if (d.trades <= d.tradesMax) {
+            tentarTrade()
+        }
     },
         d.crawlerIntevalo
     )

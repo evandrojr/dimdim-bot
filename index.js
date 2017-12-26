@@ -34,7 +34,7 @@ d.crawlerIntevalo = 5000 // Em milisegundos
 d.quantidadeVendaLtc = 0.03
 d.quantidadeCompraLtc = 0.05
 d.lucroMinimo = 0.03
-d.tradesExecutionMax = 50
+d.tradesExecutionMax = 500
 
 
 if (d.lucroMinimo < 0.0065 && d.env != "test") {

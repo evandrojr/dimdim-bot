@@ -33,14 +33,14 @@ var U = new UtilClass()
 
 var d = {}
 d.env = "test" // test | production
-d.crawlerIntevalo = 20000 // Em milisegundos
+d.crawlerIntevalo = 5000 // Em milisegundos
 d.quantidadeVendaLtc = 0.01
 d.quantidadeCompraLtc = 0.01
 d.lucroMinimo = 0.01
-d.tradesMax = 2
-d.trades = 0
+d.tradesExecutionMax = 3
+d.tradeExecution = 0
 
-if (d.lucroMinimo < 0.02 && d.env != "test") {
+if (d.lucroMinimo < 0.01 && d.env != "test") {
     console.log("Lucro muito baixo para produção");
     process.exit(1);
 }
@@ -66,6 +66,16 @@ function calcularDefinicoesVariaves(d) {
 
 
 function tentarTrade() {
+
+    d.tradesExecutionMax = 2
+    d.tradeExecution = 0
+
+    if (!d.tradeExecution && d.tradeExecution != 0 || !d.tradesExecutionMax || d.tradesExecutionMax > d.tradesMax) {
+        console.log("Número máximo de trades executados, finalizando... bom lucro!");
+        console.log(d)
+        process.exit(0)
+    }
+
     console.log(d)
     infoApi.ticker((tick) => {
         tick = tick.ticker
@@ -77,7 +87,7 @@ function tentarTrade() {
             if (d.env === "test") {
                 console.log(`SIMULAÇÃO - Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
                 console.log('SIMULAÇÃO - Ordem de venda inserida no livro.')
-                d.trades++;
+                d.tradeExecution++;
                 definirPrecos(d, tick.last)
             }
             if (d.env === "production") {
@@ -85,7 +95,7 @@ function tentarTrade() {
                     (data) => {
                         console.log(`Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
                         console.log('Ordem de venda inserida no livro. ' + data)
-                        d.trades++;
+                        d.tradeExecution++;
                         definirPrecos(d, tick.last)
                     },
                     (data) => {
@@ -102,7 +112,7 @@ function tentarTrade() {
             if (d.env === "test") {
                 console.log(`SIMULAÇÃO - Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
                 console.log('SIMULAÇÃO - Ordem de compra inserida no livro.')
-                d.trades++;
+                d.tradeExecution++;
                 definirPrecos(d, tick.last)
             }
             if (d.env === "production") {
@@ -110,7 +120,7 @@ function tentarTrade() {
                     (data) => {
                         console.log(`Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
                         console.log('Ordem de compra inserida no livro. ' + data)
-                        d.trades++;
+                        d.tradeExecution++;
                         definirPrecos(d, tick.last)
                     },
                     (data) => {
@@ -124,25 +134,15 @@ function tentarTrade() {
     })
 }
 
-////////////////////////////// Início //////////////////////////////////////////////////
-
-
 function preparar() {
     // Irá chamar rodar no final
     calcularDefinicoesVariaves(d)
 }
 
 function rodar() {
-    if (d.trades <= d.tradesMax) {
-        tentarTrade()
-    }
-    setInterval(() => {
-        if (d.trades <= d.tradesMax) {
-            tentarTrade()
-        }
-    },
-        d.crawlerIntevalo
-    )
+    setInterval(() => tentarTrade(), d.crawlerIntevalo)
 }
+
+////////////////////////////// Início da execução //////////////////////////////////////////////////
 
 preparar();

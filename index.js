@@ -33,7 +33,7 @@ d.env = "production" // test | production
 d.crawlerIntevalo = 5000 // Em milisegundos
 d.quantidadeVendaLtc = 0.03
 d.quantidadeCompraLtc = 0.05
-d.lucroMinimo = 0.03
+d.lucroMinimo = 0.02
 d.tradesExecutionMax = 500
 
 

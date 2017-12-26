@@ -26,21 +26,18 @@ var U = new UtilClass()
 //     process.exit();
 // })
 
-// Baby step 1
-// Fixar um valor em reais e um valor em LTC para comprar ou vender
-// Reais 10
-// LTC 0,01
+//TODO avaliar disponibilidade antes de executar a operação
 
 var d = {}
-d.env = "test" // test | production
-d.crawlerIntevalo = 5000 // Em milisegundos
+d.env = "production" // test | production
+d.crawlerIntevalo = 10000 // Em milisegundos
 d.quantidadeVendaLtc = 0.01
 d.quantidadeCompraLtc = 0.01
-d.lucroMinimo = 0.01
-d.tradesExecutionMax = 3
-d.tradeExecution = 0
+d.lucroMinimo = 0.06
+d.tradesExecutionMax = 5
 
-if (d.lucroMinimo < 0.01 && d.env != "test") {
+
+if (d.lucroMinimo < 0.0065 && d.env != "test") {
     console.log("Lucro muito baixo para produção");
     process.exit(1);
 }
@@ -70,7 +67,7 @@ function tentarTrade() {
     d.tradesExecutionMax = 2
     d.tradeExecution = 0
 
-    if (!d.tradeExecution && d.tradeExecution != 0 || !d.tradesExecutionMax || d.tradesExecutionMax > d.tradesMax) {
+    if (!d.tradeExecution && d.tradeExecution != 0 || !d.tradesExecutionMax || d.tradesExecution > d.tradesMax) {
         console.log("Número máximo de trades executados, finalizando... bom lucro!");
         console.log(d)
         process.exit(0)
@@ -135,6 +132,7 @@ function tentarTrade() {
 }
 
 function preparar() {
+    d.tradeExecution = 0
     // Irá chamar rodar no final
     calcularDefinicoesVariaves(d)
 }

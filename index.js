@@ -32,9 +32,9 @@ var d = {}
 d.env = "production" // test | production
 d.crawlerIntevalo = 5000 // Em milisegundos
 d.quantidadeVendaLtc = 0.03
-d.quantidadeCompraLtc = 0.03
+d.quantidadeCompraLtc = 0.05
 d.lucroMinimo = 0.03
-d.tradesExecutionMax = 5
+d.tradesExecutionMax = 50
 
 
 if (d.lucroMinimo < 0.0065 && d.env != "test") {

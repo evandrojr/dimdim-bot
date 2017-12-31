@@ -1,12 +1,3 @@
-Caso 1:
+### Baseado no artigo:
 
-
-Supondo que sejam feitas transações de 0.01 ltc a 1000 reais
-
-a comissão será 3 centavos = 100 x 0,003
-
-Lucro programado a 1%
-venda 0,1 ltc
-
-ganho = 10 * 0,01 =  0,10 reais = 10 centavos
-
+http://www.luiztools.com.br/post/como-criar-um-bot-de-compra-e-venda-de-bitcoin-usando-node-js/

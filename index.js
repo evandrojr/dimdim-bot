@@ -30,11 +30,11 @@ var U = new UtilClass()
 
 var d = {}
 d.env = "production" // test | production
-d.crawlerIntevalo = 5000 // Em milisegundos
-d.quantidadeVendaLtc = 0.03
-d.quantidadeCompraLtc = 0.05
+d.crawlerIntevalo = 20000 // Em milisegundos
+d.quantidadeVendaLtc = 0.01
+d.quantidadeCompraLtc = 0.006
 d.lucroMinimo = 0.02
-d.tradesExecutionMax = 500
+d.tradesExecutionMax = 5000
 
 
 if (d.lucroMinimo < 0.0065 && d.env != "test") {
@@ -63,9 +63,6 @@ function calcularDefinicoesVariaves(d) {
 
 
 function tentarTrade() {
-
-    d.tradesExecutionMax = 2
-    d.tradeExecution = 0
 
     if (!d.tradeExecution && d.tradeExecution != 0 || !d.tradesExecutionMax || d.tradesExecution > d.tradesMax) {
         console.log("Número máximo de trades executados, finalizando... bom lucro!");

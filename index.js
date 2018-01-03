@@ -1,5 +1,5 @@
-//index.js
 "use strict";
+//index.js
 
 require("dotenv-safe").load()
 const MercadoBitcoin = require("./api").MercadoBitcoin
@@ -26,16 +26,15 @@ var U = new UtilClass()
 //     process.exit();
 // })
 
-//TODO avaliar disponibilidade antes de executar a operação
+// TODO avaliar disponibilidade antes de executar a operação
 
 var d = {}
-d.env = "production" // test | production
+d.env = "test" // test | production
 d.crawlerIntevalo = 20000 // Em milisegundos
 d.quantidadeVendaLtc = 0.01
 d.quantidadeCompraLtc = 0.006
 d.lucroMinimo = 0.02
 d.tradesExecutionMax = 5000
-
 
 if (d.lucroMinimo < 0.0065 && d.env != "test") {
     console.log("Lucro muito baixo para produção");
@@ -54,90 +53,102 @@ function definirPrecos(d, lastPrice) {
     console.log(precos)
 }
 
-function calcularDefinicoesVariaves(d) {
-    infoApi.ticker((tick) => {
-        definirPrecos(d, parseFloat(tick.ticker.last))
-        rodar()
+async function calcularDefinicoesVariaves(d) {
+    return new Promise(resolve => {
+        infoApi.ticker((tick) => {
+            definirPrecos(d, parseFloat(tick.ticker.last))
+            resolve(d);
+        })
     })
 }
 
 
-function tentarTrade() {
+async function tentarTrade() {
+    // return new Promise(resolve => {
 
-    if (!d.tradeExecution && d.tradeExecution != 0 || !d.tradesExecutionMax || d.tradesExecution > d.tradesMax) {
-        console.log("Número máximo de trades executados, finalizando... bom lucro!");
+
+        if (!d.tradeExecution && d.tradeExecution != 0 || !d.tradesExecutionMax || d.tradesExecution > d.tradesMax) {
+            console.log("Número máximo de trades executados, finalizando... bom lucro!");
+            console.log(d)
+            process.exit(0)
+        }
+
         console.log(d)
-        process.exit(0)
-    }
+        await infoApi.ticker((tick) => {
+            tick = tick.ticker
+            console.log(tick)
+            // console.log(tick.last)
 
-    console.log(d)
-    infoApi.ticker((tick) => {
-        tick = tick.ticker
-        console.log(tick)
-        // console.log(tick.last)
+            // Vender
+            if (tick.last >= d.precoMinimoVenda) {
+                if (d.env === "test") {
+                    console.log(`SIMULAÇÃO - Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
+                    console.log('SIMULAÇÃO - Ordem de venda inserida no livro.')
+                    d.tradeExecution++;
+                    definirPrecos(d, tick.last)
+                }
+                if (d.env === "production") {
+                    tradeApi.placeSellOrder(d.quantidadeVendaLtc, tick.last,
+                        (data) => {
+                            console.log(`Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
+                            console.log('Ordem de venda inserida no livro. ' + data)
+                            d.tradeExecution++;
+                            definirPrecos(d, tick.last)
+                        },
+                        (data) => {
+                            console.log('Erro ao inserir ordem de venda no livro. ' + data)
+                        }
+                    )
+                }
+            } else {
+                console.log("Barato demais para vender, aguarde mais um pouco até alcançar " + d.precoMinimoVenda)
+            }
 
-        // Vender
-        if (tick.last >= d.precoMinimoVenda) {
-            if (d.env === "test") {
-                console.log(`SIMULAÇÃO - Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
-                console.log('SIMULAÇÃO - Ordem de venda inserida no livro.')
-                d.tradeExecution++;
-                definirPrecos(d, tick.last)
+            // Comprar
+            if (tick.last <= d.precoMaximoCompra) {
+                if (d.env === "test") {
+                    console.log(`SIMULAÇÃO - Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
+                    console.log('SIMULAÇÃO - Ordem de compra inserida no livro.')
+                    d.tradeExecution++;
+                    definirPrecos(d, tick.last)
+                }
+                if (d.env === "production") {
+                    tradeApi.placeBuyOrder(d.quantidadeCompraLtc, tick.last,
+                        (data) => {
+                            console.log(`Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
+                            console.log('Ordem de compra inserida no livro. ' + data)
+                            d.tradeExecution++;
+                            definirPrecos(d, tick.last)
+                        },
+                        (data) => {
+                            console.log('Erro ao inserir ordem de compra no livro. ' + data)
+                        }
+                    )
+                }
+            } else {
+                console.log("Caro demais para comprar, aguarde mais um pouco até alcançar " + d.precoMaximoCompra)
             }
-            if (d.env === "production") {
-                tradeApi.placeSellOrder(d.quantidadeVendaLtc, tick.last,
-                    (data) => {
-                        console.log(`Criada ordem de venda ${d.quantidadeVendaLtc} por ${tick.last}`)
-                        console.log('Ordem de venda inserida no livro. ' + data)
-                        d.tradeExecution++;
-                        definirPrecos(d, tick.last)
-                    },
-                    (data) => {
-                        console.log('Erro ao inserir ordem de venda no livro. ' + data)
-                    }
-                )
-            }
-        } else {
-            console.log("Barato demais para vender, aguarde mais um pouco até alcançar " + d.precoMinimoVenda)
-        }
+        })
+    console.log("Fim tentar trade");
 
-        // Comprar
-        if (tick.last <= d.precoMaximoCompra) {
-            if (d.env === "test") {
-                console.log(`SIMULAÇÃO - Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
-                console.log('SIMULAÇÃO - Ordem de compra inserida no livro.')
-                d.tradeExecution++;
-                definirPrecos(d, tick.last)
-            }
-            if (d.env === "production") {
-                tradeApi.placeBuyOrder(d.quantidadeCompraLtc, tick.last,
-                    (data) => {
-                        console.log(`Criada ordem de compra ${d.quantidadeCompraLtc} por ${tick.last}`)
-                        console.log('Ordem de compra inserida no livro. ' + data)
-                        d.tradeExecution++;
-                        definirPrecos(d, tick.last)
-                    },
-                    (data) => {
-                        console.log('Erro ao inserir ordem de compra no livro. ' + data)
-                    }
-                )
-            }
-        } else {
-            console.log("Caro demais para comprar, aguarde mais um pouco até alcançar " + d.precoMaximoCompra)
-        }
-    })
+    // })
 }
 
 function preparar() {
     d.tradeExecution = 0
-    // Irá chamar rodar no final
-    calcularDefinicoesVariaves(d)
 }
 
-function rodar() {
+async function rodar() {
+    preparar()
+    await calcularDefinicoesVariaves(d)
+    // console.log(r);
+
+    console.log("Antes do tentar trade")
+    tentarTrade()
+    console.log("Apos do tentar trade")
     setInterval(() => tentarTrade(), d.crawlerIntevalo)
 }
 
 ////////////////////////////// Início da execução //////////////////////////////////////////////////
 
-preparar();
+rodar();

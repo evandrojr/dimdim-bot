@@ -18,7 +18,7 @@ var MercadoBitcoin = function (config) {
 
 MercadoBitcoin.prototype = {
 
-    ticker: function (success) {
+    ticker: async function (success) {
         this.call('ticker', success);
     },
 

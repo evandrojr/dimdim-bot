@@ -30,10 +30,10 @@ var U = new UtilClass()
 
 var d = {}
 d.env = "production" // test | production
-d.crawlerIntevalo = 20000 // Em milisegundos
+d.crawlerIntevalo = 40000 // Em milisegundos
 d.quantidadeVendaLtc = 0.01
-d.quantidadeCompraLtc = 0.006
-d.lucroMinimo = 0.02
+d.quantidadeCompraLtc = 0.01
+d.lucroMinimo = 0.06
 d.tradesExecutionMax = 5000
 
 
